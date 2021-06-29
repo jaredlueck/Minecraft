@@ -82,12 +82,6 @@ Model::Model(const std::string &inputfile)
                 new_vert.texCoords.x = tx;
                 new_vert.texCoords.y = ty;
 
-                //we are setting the vertex color as the vertex normal. This is just for display purposes
-                // new_vert.color = new_vert.normal;
-
-                
-
-
 				vertices.push_back(new_vert);
 			}
 			index_offset += fv;
@@ -117,70 +111,6 @@ Model::Model(const std::string &inputfile)
 
     glBindVertexArray(0);   
     
-}
-
-void Model::LoadMaterialTextures(tinyobj::material_t mat)
-{
-
-    std::filesystem::path dirPath = std::filesystem::current_path();
-    std::string diffusePath = dirPath.string() + "/textures/" + mat.diffuse_texname;
-
-    std::string ambientPath = dirPath.string() + "/textures/" + mat.ambient_texname;
-
-    std::string specularPath = dirPath.string() + "/textures/" + mat.specular_texname;
-
-    TextureFromFile(ambientPath.c_str(), "texture_ambient");
-    TextureFromFile(diffusePath.c_str(), "texture_diffuse");
-    TextureFromFile(specularPath.c_str(), "texture_specular");
-    
-}
-
-unsigned int Model::TextureFromFile(const char* path, const std::string& type)
-{
-    int width, height, nrChannels;
-
-    unsigned char *data = stbi_load(path, &width, &height, &nrChannels, 0);
-
-    if(data)
-    {
-
-        unsigned int textureID;
-        glGenTextures(1, &textureID);
-
-        GLenum format;
-
-        if(nrChannels == 1)
-            format = GL_RED;
-        else if(nrChannels == 3)
-            format = GL_RGB;
-        else if(nrChannels == 4)
-            format = GL_RGBA;
-
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        // Texture texture;
-        // texture.id = textureID;
-        // texture.path = path;
-        // texture.type = type;
-
-        // textures.push_back(texture);
-
-        stbi_image_free(data);
-    }
-    else
-    {
-        std::cout << "Failed to load texture from path: " << path << std::endl;
-        stbi_image_free(data);
-    }
-
-    return 0;
 }
 
 void Model::Draw(Shader& shader){

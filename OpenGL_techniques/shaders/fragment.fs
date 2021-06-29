@@ -73,14 +73,28 @@ uniform bool useNormalMap;
 
 uniform vec3 cameraPos;
 
+uniform vec2 u_resolution;
+
 flat in vec3 cam_world;
 
 vec3 calculatePointLight(PointLight light);
+float random(vec2 st);
 
 void main()
-{	
-	FragColor = vec4(calculatePointLight(lights[0]), 1.0);
+{	vec2 st = gl_FragCoord.xy/u_resolution.xy;
+	st *= 10.0;
+	vec2 ipos = floor(st);
+	vec2 fpos = fract(st);
+	
+	vec3 color = vec3(random(ipos));
+
+	gl_FragColor = vec4(color, 1.0);
 };
+
+float random(vec2 st)
+{
+	return  fract(sin(dot(st.xy, vec2(12.9898, 78.233)))* 437580.5453123);
+}
 
 vec3 calculatePointLight(PointLight light)
 {

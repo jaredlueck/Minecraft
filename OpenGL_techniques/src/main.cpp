@@ -9,21 +9,47 @@
 #include "Model.h"
 #include "Shader.h"
 #include "LightSource.h"
+#include "Error.h"
+#include "Block.h"
+#include "Camera.h"
 
-void CheckGLError();
-static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos);
-static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-static void window_size_callback(GLFWwindow* window, int width, int height);
+#include "TerrainGeneration.h"
+
+
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void processInput(GLFWwindow *window);
+void window_size_callback(GLFWwindow* window, int width, int height);
+
+void get_resolution();
 
 int SCR_WIDTH;
 int SCR_HEIGHT;
 
+
+int px;
+int py;
+
 bool mouseDown = false;
+
+Camera camera(glm::vec3(0, 128, 10));
+
 double initX = 0.0f;
 double initY = 0.0f;
 
 double deltaX = 0.0f;
 double deltaY = 0.0f;
+
+float lastX;
+float lastY;
+bool firstMouse = true;
+
+// timing
+float deltaTime = 0.0f;
+float lastFrame = 0.0f;
+
 
 double rotationSpeed = 0.01;
 
@@ -31,6 +57,8 @@ glm::mat4 projection;
 
 int main(void)
 {
+	//camera.Front = glm::vec3(-20, -300, -20);
+
     GLFWwindow* window;
 
     /* Initialize the library */
@@ -48,7 +76,18 @@ int main(void)
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
+	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+	glfwSetCursorPosCallback(window, mouse_callback);
+	glfwSetScrollCallback(window, scroll_callback);
+
+	// tell GLFW to capture our mouse
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+
     glfwGetWindowSize(window, &SCR_WIDTH, &SCR_HEIGHT);
+
+	lastX = SCR_WIDTH / 2.0f;
+	lastY = SCR_HEIGHT / 2.0f;
+
 
     // Load all OpenGL functions using the glfw loader function
     // If you use SDL you can use: https://wiki.libsdl.org/SDL_GL_GetProcAddress
@@ -61,96 +100,49 @@ int main(void)
     // if a certain extension/version is available.
     printf("OpenGL %d.%d\n", GLVersion.major, GLVersion.minor);
 
-    glfwSetMouseButtonCallback(window, mouse_button_callback);
-    glfwSetCursorPosCallback(window, cursor_position_callback);
+	get_resolution();
+
     glfwSetWindowSizeCallback(window, window_size_callback);
+	CheckGLError(__LINE__, __FILE__);
     
     glEnable(GL_DEPTH_TEST);  
 
-    Shader shader("./shaders/vertex.vs", "./shaders/fragment.fs");
 
-    shader.Bind();
+	
+	projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH /(float)SCR_HEIGHT, 0.1f, 200.0f);
+	CheckGLError(__LINE__, __FILE__);
 
-    Model model("./models/backpack.obj");
-    
-    projection = glm::perspective(glm::radians(45.0f), (float)SCR_HEIGHT/(float)SCR_WIDTH, 0.1f, 200.0f);
+	Shader blockShader("./shaders/Block.vs", "./shaders/Block.fs");
+	blockShader.Bind();
+	CheckGLError(__LINE__, __FILE__);
+	blockShader.setMat4("projection", projection);
+	CheckGLError(__LINE__, __FILE__);
+	blockShader.setMat4("view", camera.GetViewMatrix());
+	CheckGLError(__LINE__, __FILE__);
+	
+	TerrainGeneration generator;
 
-    glm::mat4 lookat = glm::lookAt(glm::vec3(0, 0, 10), glm::vec3(0, 0, 0), glm::vec3(0, 1, 0));
-
-    shader.setMat4("view", lookat);
-
-    glm::mat4 identity = glm::mat4(1.0f);
-    glm::mat4 modelMat = glm::mat4(1.0f);
-
-    struct LightSource 
-    {
-        glm::vec3 position;
-		float pad1;
-		glm::vec3 color;
-		float pad2;
-		glm::vec3 ambient;
-		float pad3;
-		glm::vec3 diffuse;
-		float pad4;
-		glm::vec3 specular;
-
-
-        float constant;
-        float linear;
-        float quadratic;
-    };
-
-    LightSource l1;
-
-    l1.position = glm::vec3(0.0f, 0.0f, 10.0f);
-	l1.color = glm::vec3(1.0f, 1.0f, 1.0f);
-
-	l1.ambient = glm::vec3(0.2, 0.2, 0.2);
-	l1.diffuse = glm::vec3(0.5, 0.5, 0.5);
-	l1.specular = glm::vec3(1.0, 1.0, 1.0);
-
-    l1.constant = 1.0f;
-    l1.linear = 0.1f;
-    l1.quadratic = 0.1f;
-
-    LightSource lights[] = {l1};
-    
-    unsigned int ubo;
-    glGenBuffers(1, &ubo);
-    
-    int lightIndex = glGetUniformBlockIndex(shader.ID, "Light");
-    glUniformBlockBinding(shader.ID, lightIndex, 0);
-    CheckGLError();
-
-    if(lightIndex == GL_INVALID_INDEX)
-    {
-        std::cout << "Failed to get location of uniform buffer" << std::endl;
-    }
-
-    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
-    glBufferData(GL_UNIFORM_BUFFER, sizeof(lights),  &lights[0], GL_STATIC_DRAW);
-    CheckGLError();
-    
-    // glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
-    glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo); 
+	generator.BuildChunk();
+	
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
     {
+
+		float currentFrame = glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        if(mouseDown)
-        {
-            modelMat = glm::rotate(modelMat, glm::radians((float)deltaX * 1.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-            modelMat = glm::rotate(modelMat, glm::radians((float)deltaY * 1.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-        }
-        
-        shader.setMat4("model", modelMat);
-        shader.setMat4("projection", projection);
-        model.Draw(shader);
-        /* Swap front and back buffers */
+		processInput(window);
+
+		blockShader.Bind();
+		blockShader.setMat4("view", camera.GetViewMatrix());
+
+		generator.RenderChunk(blockShader);
+
+		/* Swap front and back buffers */
         glfwSwapBuffers(window);
 
         /* Poll for and process events */
@@ -161,28 +153,56 @@ int main(void)
     return 0;
 }
 
-static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+void processInput(GLFWwindow *window)
 {
-    if(mouseDown)
-    {
-        deltaX = (xpos - initX)/SCR_WIDTH;
-        deltaY = (ypos - initY)/SCR_HEIGHT;
-    }
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		glfwSetWindowShouldClose(window, true);
+
+	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		camera.ProcessKeyboard(FORWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		camera.ProcessKeyboard(BACKWARD, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		camera.ProcessKeyboard(LEFT, deltaTime);
+	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		camera.ProcessKeyboard(RIGHT, deltaTime);
 }
 
-void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+// glfw: whenever the window size changed (by OS or user resize) this callback function executes
+// ---------------------------------------------------------------------------------------------
+void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
-    {
-        glfwGetCursorPos(window, &initX, &initY);
-        mouseDown = true;
-    }
+	// make sure the viewport matches the new window dimensions; note that width and 
+	// height will be significantly larger than specified on retina displays.
+	glViewport(0, 0, width, height);
+}
 
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE)
-    {
-        mouseDown = false;
-        
-    }
+
+// glfw: whenever the mouse moves, this callback is called
+// -------------------------------------------------------
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	if (firstMouse)
+	{
+		lastX = xpos;
+		lastY = ypos;
+		firstMouse = false;
+	}
+
+	float xoffset = xpos - lastX;
+	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+
+	lastX = xpos;
+	lastY = ypos;
+
+	camera.ProcessMouseMovement(xoffset, yoffset);
+}
+
+// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+// ----------------------------------------------------------------------
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	camera.ProcessMouseScroll(yoffset);
 }
 
 void window_size_callback(GLFWwindow* window, int width, int height)
@@ -195,31 +215,13 @@ void window_size_callback(GLFWwindow* window, int width, int height)
     projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH/(float)SCR_HEIGHT, 0.1f, 200.0f);
 }
 
-const char * GetGLErrorStr(GLenum err)
-{
-    switch (err)
-    {
-    case GL_NO_ERROR:          return "No error";
-    case GL_INVALID_ENUM:      return "Invalid enum";
-    case GL_INVALID_VALUE:     return "Invalid value";
-    case GL_INVALID_OPERATION: return "Invalid operation";
-    case GL_STACK_OVERFLOW:    return "Stack overflow";
-    case GL_STACK_UNDERFLOW:   return "Stack underflow";
-    case GL_OUT_OF_MEMORY:     return "Out of memory";
-    default:                   return "Unknown error";
-    }
-}
 
-void CheckGLError()
-{
-    while (true)
-    {
-        const GLenum err = glGetError();
-        if (GL_NO_ERROR == err)
-            break;
 
-        std::cout << "GL Error: " << GetGLErrorStr(err) << std::endl;
-    }
+void get_resolution() {
+	const GLFWvidmode * mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+
+	px = mode->width;
+	py = mode->height;
 }
 
 
