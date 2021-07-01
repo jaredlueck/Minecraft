@@ -166,7 +166,6 @@
     <ClInclude Include="src\Shader.h" />
     <ClInclude Include="src\TerrainGeneration.h" />
     <ClInclude Include="src\Texture.h" />
-    <ClInclude Include="TerrainGeneration.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src/Block.cpp" />

@@ -34,7 +34,7 @@ int py;
 
 bool mouseDown = false;
 
-Camera camera(glm::vec3(0, 128, 10));
+Camera camera(glm::vec3(0, 40, 10));
 
 double initX = 0.0f;
 double initY = 0.0f;
@@ -105,9 +105,7 @@ int main(void)
     glfwSetWindowSizeCallback(window, window_size_callback);
 	CheckGLError(__LINE__, __FILE__);
     
-    glEnable(GL_DEPTH_TEST);  
-
-
+    glEnable(GL_DEPTH_TEST); 
 	
 	projection = glm::perspective(glm::radians(45.0f), (float)SCR_WIDTH /(float)SCR_HEIGHT, 0.1f, 200.0f);
 	CheckGLError(__LINE__, __FILE__);
@@ -119,10 +117,12 @@ int main(void)
 	CheckGLError(__LINE__, __FILE__);
 	blockShader.setMat4("view", camera.GetViewMatrix());
 	CheckGLError(__LINE__, __FILE__);
+	glm::mat4 model(1.0f);
+	blockShader.setMat4("model", model);
 	
 	TerrainGeneration generator;
 
-	generator.BuildChunk();
+	generator.LoadChunks();
 	
 
     /* Loop until the user closes the window */

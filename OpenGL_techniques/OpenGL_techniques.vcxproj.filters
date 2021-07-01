@@ -48,9 +48,6 @@
     <ClInclude Include="src\noise.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TerrainGeneration.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="game_settings.h">
       <Filter>Header Files</Filter>
     </ClInclude>

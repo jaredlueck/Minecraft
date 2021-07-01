@@ -5,24 +5,27 @@
 #include <vector>
 #include "Shader.h"
 #include "game_settings.h"
-#include <unordered_map>
+#include <map>
 #include "Chunk.h"
 
 struct ChunkPos
 {
 	int x;
-	int y;
-	ChunkPos(int x, int y) : x(x), y(y) {}
+	int z;
+	ChunkPos(int x, int y) : x(x), z(y) {}
 };
 
 class TerrainGeneration
 {
 	public:
-		void BuildChunk();
+		void BuildChunk(int xpos, int zpos);
 		void RenderChunk(Shader& shader);
+		void LoadChunks();
 	private:
+		BlockType GetBlockType(int x, int y, int z);
 		std::vector<Block> blocksv;
-		std::unordered_map<ChunkPos, Chunk> chunks;
+		std::map<ChunkPos, Chunk> chunks;
+		std::vector<Chunk> chunksv;
 };
 
 #endif // !TERRAIN_H
