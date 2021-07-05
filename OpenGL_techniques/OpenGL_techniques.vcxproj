@@ -154,6 +154,7 @@
     <ClInclude Include="src\Block.h" />
     <ClInclude Include="src\Chunk.h" />
     <ClInclude Include="src\Error.h" />
+    <ClInclude Include="src\FastNoiseLite.h" />
     <ClInclude Include="src\game_settings.h" />
     <ClInclude Include="src\noise.h" />
     <ClInclude Include="src\pch.h" />

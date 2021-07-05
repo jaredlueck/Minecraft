@@ -1,5 +1,8 @@
 #include "TerrainGeneration.h"
 #include "game_settings.h"
+#include<algorithm>
+
+
 extern "C" 
 {
 	#include "noise.h"
@@ -49,19 +52,31 @@ BlockType TerrainGeneration::GetBlockType(int x, int y, int z)
 
 	BlockType blockType = BLOCK_AIR;
 
-	float s1 = simplex2(x*.01f, z*.01f, 1, 0.25f, 1.0f) * 10;
-	float s2 = simplex2(x * 0.01f, z * 0.01f, 1, 0.25f, 1.0f) * 10 * (simplex2(x*0.05, z*0.05f, 1, 0.25f, 1.0));
+	noise.SetFractalType(FastNoiseLite::FractalType::FractalType_FBm);
 
-	float heightMap = s1 + s2;
+	noise.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_OpenSimplex2);
 
-	float baseLandHeight = Chunk::getHeight() * 0.5f + heightMap;
+	float simplex1 = noise.GetNoise(x*.8f, z*.8f) * 10;
+	float simplex2 = noise.GetNoise(x*3.0f, z*3.0f) * 10 * (noise.GetNoise(x*.3f, z*.3f) + .5f);
 
-	float simplexStone1 = simplex2(x * 1.0f, z * 1.0f, 1, 1.0f, 1.0f) * 10;
+	float heightMap = simplex1 + simplex2;
 
-	float simplexStone2 = simplex2(x * 5.0f, z * 5.0f, 1, 1.0f, 1.0f) * 10 * simplex2(x * 0.3f, z * 0.3f, 1, 1.0f, 1.0f);
+	float baseLandHeight = Chunk::chunkHeight * .5f + heightMap;
 
+	noise.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_Perlin);
+	
+
+	float caveNoise1 = noise.GetNoise(x*5.0f, y*10.0f, z*5.0f);
+	
+	noise.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_OpenSimplex2);
+
+	float caveMask = noise.GetNoise(x*.3f, z*.3f) + .3f;
+
+	float simplexStone1 = noise.GetNoise(x * 1.0f, z * 1.0f) * 10;
+	float simplexStone2 = noise.GetNoise(x * 5.0f, z * 5.0f) * 10 * (noise.GetNoise(x*.3f, z*.3f) + .5f);
+	
 	float stoneHeightMap = simplexStone1 + simplexStone2;
-	float baseStoneHeight = Chunk::getHeight() * 0.5 + stoneHeightMap;
+	float baseStoneHeight = Chunk::chunkHeight * 0.25f + stoneHeightMap;
 
 	if (y <= baseLandHeight)
 	{
@@ -71,6 +86,11 @@ BlockType TerrainGeneration::GetBlockType(int x, int y, int z)
 			blockType = BLOCK_GRASS;
 		if (y <= baseStoneHeight)
 			blockType = BLOCK_STONE;
+	}
+
+	if (caveNoise1 > std::max(caveMask, .2f))
+	{
+		blockType = BLOCK_AIR;
 	}
 
 	return blockType;

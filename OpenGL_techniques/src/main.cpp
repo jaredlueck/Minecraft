@@ -34,7 +34,7 @@ int py;
 
 bool mouseDown = false;
 
-Camera camera(glm::vec3(0, 40, 10));
+Camera camera(glm::vec3(0, 50, 10));
 
 double initX = 0.0f;
 double initY = 0.0f;

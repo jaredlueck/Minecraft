@@ -7,6 +7,7 @@
 #include "game_settings.h"
 #include <map>
 #include "Chunk.h"
+#include "FastNoiseLite.h"
 
 struct ChunkPos
 {
@@ -21,6 +22,7 @@ class TerrainGeneration
 		void BuildChunk(int xpos, int zpos);
 		void RenderChunk(Shader& shader);
 		void LoadChunks();
+		FastNoiseLite noise;
 	private:
 		BlockType GetBlockType(int x, int y, int z);
 		std::vector<Block> blocksv;
