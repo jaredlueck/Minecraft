@@ -58,15 +58,14 @@ glm::mat4 projection;
 int main(void)
 {
 	//camera.Front = glm::vec3(-20, -300, -20);
-
-    GLFWwindow* window;
+	GLFWwindow* window;
 
     /* Initialize the library */
     if (!glfwInit())
         return -1;
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(1920, 1080, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -87,9 +86,8 @@ int main(void)
 
 	lastX = SCR_WIDTH / 2.0f;
 	lastY = SCR_HEIGHT / 2.0f;
-
-
-    // Load all OpenGL functions using the glfw loader function
+	
+	// Load all OpenGL functions using the glfw loader function
     // If you use SDL you can use: https://wiki.libsdl.org/SDL_GL_GetProcAddress
     if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress)) {
         std::cout << "Failed to initialize OpenGL context" << std::endl;
@@ -123,6 +121,14 @@ int main(void)
 	TerrainGeneration generator;
 
 	generator.LoadChunks();
+
+	Texture texture;
+
+	texture.Load("texture_big.png");
+	texture.Bind(0);
+	blockShader.setInt("texture_atlas", 0);
+
+	CheckGLError(__LINE__, __FILE__);
 	
 
     /* Loop until the user closes the window */

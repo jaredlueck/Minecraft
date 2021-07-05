@@ -29,9 +29,11 @@ public:
 private:
 	unsigned int VAO;
 	unsigned int VBO;
+	unsigned int IBO;
+	unsigned int UV;
 	std::vector<glm::vec3> vertices;
-	std::vector<unsigned int> indices;
-	std::vector<glm::vec2> texCoords;
+
+	std::vector<glm::vec2> uvs;
 	
 };
 

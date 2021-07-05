@@ -151,7 +151,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="game_settings.h" />
     <ClInclude Include="src\Block.h" />
     <ClInclude Include="src\Chunk.h" />
     <ClInclude Include="src\Error.h" />
@@ -187,6 +186,9 @@
     <ClCompile Include="src\TerrainGeneration.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\tiny_obj_loader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="textures\texture_big.png" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

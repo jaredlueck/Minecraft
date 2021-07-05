@@ -67,12 +67,12 @@ const float Block::normal[] =
 	0.0f, 0.0f, 1.0f,
 	0.0f, 0.0f, 1.0f,
 
-	-1.0f, 0.0f, 0.0f,
-	-1.0f, 0.0f, 0.0f,
-	-1.0f, 0.0f, 0.0f,
-	-1.0f, 0.0f, 0.0f,
-	-1.0f, 0.0f, 0.0f,
-	-1.0f, 0.0f, 0.0f,
+   -1.0f, 0.0f, 0.0f,
+   -1.0f, 0.0f, 0.0f,
+   -1.0f, 0.0f, 0.0f,
+   -1.0f, 0.0f, 0.0f,
+   -1.0f, 0.0f, 0.0f,
+   -1.0f, 0.0f, 0.0f,
 
 	1.0f, 0.0f, 0.0f,
 	1.0f, 0.0f, 0.0f,
@@ -141,7 +141,15 @@ const float Block::uv[] =
 	 0.0f,  1.0f
 };
 
-Block::Block(){}
+Block::Block(Tile tile) : top(tile), side(tile), bottom(tile){}
+Block::Block(Tile top, Tile side, Tile bottom) : top(top), side(side), bottom(bottom) {}
+
+const std::unordered_map<int, Block> Block::blocks = {
+			{BLOCK_DIRT, Block(Tile(DIRT_X, DIRT_Y))},
+			{BLOCK_GRASS, Block(Tile(GRASS_TOP_X, GRASS_TOP_Y), Tile(GRASS_SIDE_X, GRASS_TOP_Y), Tile(DIRT_X, DIRT_Y))},
+			{BLOCK_STONE, Block(Tile(STONE_X, STONE_Y))}
+
+};
 
 void Block::SetPosition(int x, int y, int z)
 {
