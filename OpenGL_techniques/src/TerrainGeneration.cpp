@@ -1,6 +1,7 @@
 #include "TerrainGeneration.h"
 #include "game_settings.h"
-#include<algorithm>
+#include <algorithm>
+
 
 
 extern "C" 
@@ -19,7 +20,6 @@ void TerrainGeneration::BuildChunk(int xpos, int zpos)
 		{
 			for (int y = 0; y < chunk.chunkHeight; y++)
 			{
-				//float n = GetBlockType((xpos + x - 1), y, (zpos + z - 1));
 				chunk.blocks[x][y][z] = GetBlockType((xpos + x - 1), y, (zpos + z - 1));
 			}
 		}
@@ -65,7 +65,6 @@ BlockType TerrainGeneration::GetBlockType(int x, int y, int z)
 
 	noise.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_Perlin);
 	
-
 	float caveNoise1 = noise.GetNoise(x*5.0f, y*10.0f, z*5.0f);
 	
 	noise.SetNoiseType(FastNoiseLite::NoiseType::NoiseType_OpenSimplex2);
